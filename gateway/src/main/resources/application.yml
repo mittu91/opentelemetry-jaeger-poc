@@ -1,0 +1,50 @@
+server:
+  port: 8567
+
+project1:
+  url: http://localhost:8858
+
+spring:
+  application:
+    name: demo-gateway
+  cloud:
+    gateway:
+      routes:
+        - id: project_1
+          uri: http://localhost:8858
+          predicates:
+            - Path=/demo/**
+        - id: qurkus-app
+          uri: http://localhost:8080
+          predicates:
+            - Path=/qurkusApi/**
+        - id: node-app
+          uri: http://localhost:3000
+          predicates:
+            - Path=/node/api/**
+  sleuth:
+    propagation:
+      type: B3
+  zipkin:
+    baseUrl: http://127.0.0.1:9411/
+
+gateway:
+  url:
+    publicPath:
+      - /demo/public/**
+      - /gateway/base
+      - /qurkusApi/**
+      - /node/api/**
+    authenticatedPath:
+      - /demo/protected/**
+
+    privatePath:
+      - /demo/private/**
+
+logging:
+  level:
+    org:
+      springframework:
+        web:
+          servlet:
+            DispatcherServlet: DEBUG

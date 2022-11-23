@@ -1,0 +1,49 @@
+buildscript {
+    dependencies {
+        classpath "io.spring.gradle:dependency-management-plugin:0.5.2.RELEASE"
+    }
+}
+
+plugins {
+    id 'org.springframework.boot' version '2.7.4'
+    id 'io.spring.dependency-management' version '1.0.11.RELEASE'
+    id 'java'
+}
+
+group = 'com.demo'
+version = '0.0.1-SNAPSHOT'
+sourceCompatibility = '17'
+
+repositories {
+    mavenCentral()
+    maven {
+        url "https://repo.spring.io/milestone"
+    }
+}
+
+dependencies {
+    implementation 'org.springframework.boot:spring-boot-starter-web'
+    implementation group: 'org.mariadb.jdbc', name: 'mariadb-java-client', version: '2.2.0'
+    implementation 'org.springframework.boot:spring-boot-starter-data-jpa'
+    implementation 'org.springframework.boot:spring-boot-starter-validation'
+    implementation 'io.jsonwebtoken:jjwt:0.9.1'
+    implementation 'org.springframework.security:spring-security-crypto:5.7.3'
+    implementation 'org.bouncycastle:bcprov-jdk15on:1.70'
+    implementation 'org.redisson:redisson:3.17.7'
+    implementation group: 'org.liquibase', name: 'liquibase-core', version: '4.6.2'
+    implementation 'org.springframework.boot:spring-boot-starter-data-redis'
+    implementation 'org.springframework.cloud:spring-cloud-starter-sleuth'
+    implementation 'org.springframework.cloud:spring-cloud-sleuth-zipkin'
+    implementation 'org.springdoc:springdoc-openapi-ui:1.6.12'
+    implementation 'p6spy:p6spy:3.9.1'
+}
+
+dependencyManagement {
+    imports {
+        mavenBom "org.springframework.cloud:spring-cloud-dependencies:2021.0.4"
+    }
+}
+
+test {
+    useJUnitPlatform()
+}

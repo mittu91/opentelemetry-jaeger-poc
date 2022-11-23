@@ -1,0 +1,48 @@
+app:
+  security:
+    jwt:
+      refreshTokenExpTime: 75
+      tokenExpirationTime: 60
+      tokenIssuer: https://www.smartsensesolutions.com/
+      tokenSigningKey: A1258{23&^)9qw16uwb72i9@#
+
+server:
+  port: 8858
+
+spring:
+  application:
+    name: demo-identity
+  liquibase:
+    change-log: classpath:/db/changelog/changelog-master.xml
+  datasource:
+    password: smart
+    url: jdbc:mariadb://localhost:3306/test
+    username: root
+    hibernate:
+      ddl-auto: update
+      show-sql: true
+  output:
+    ansi:
+      enabled: ALWAYS
+  redis:
+    host: localhost
+    port: 6379
+#    password: smart
+    database: 7
+  sleuth:
+    propagation:
+      type: B3
+    jdbc:
+      p6spy:
+        tracing:
+          include-parameter-values: false
+  zipkin:
+    baseUrl: http://127.0.0.1:9411/
+
+logging:
+  level:
+    org:
+      springframework:
+        web:
+          servlet:
+            DispatcherServlet: DEBUG
