@@ -98,6 +98,116 @@ You can run your application in dev mode that enables live coding using:
 ## View Tracing Information 
 Then visit the [Jaeger UI(http://localhost:16686/)](http://localhost:16686/) to see the tracing information.
 
-
 ## image :
 <img src="images/Jaeger_ui.png" width="1000"/>
+
+ 
+## Node Poc with opentelementry
+
+1. Node v10+ is supported by OpenTelemetry.
+
+2. Install to following packages for opentelementry
+``` 
+npm install --save @opentelemetry/api 
+npm install --save @opentelemetry/sdk-trace-node
+npm install --save opentelemetry-instrumentation-express
+npm install --save @opentelemetry/instrumentation-mongodb
+npm install --save @opentelemetry/instrumentation-http
+npm install --save express
+npm install --save mongodb //for poc perpose 
+npm install --save @opentelemetry/exporter-jaeger
+``` 
+#### Add B3 Propogation (Read from : https://www.npmjs.com/package/@opentelemetry/propagator-b3)
+``` 
+npm i @opentelemetry/propagator-b3
+``` 
+// after download package add following code in tracing.js
+``` 
+const api = require('@opentelemetry/api');
+const { CompositePropagator } = require('@opentelemetry/core');
+const { B3Propagator, B3InjectEncoding } = require('@opentelemetry/propagator-b3');
+api.propagation.setGlobalPropagator(
+  new CompositePropagator({
+    propagators: [
+      new B3Propagator(),
+      new B3Propagator({ injectEncoding: B3InjectEncoding.MULTI_HEADER }),
+    ],
+  })
+);
+
+``` 
+3. Create Tracing file tracing.js
+
+4. Run your application and execute a few requests
+
+5. use your browser to view Jaeger UI at  http://localhost:16686/
+## Go Service  (Note : for this poc we use mongodb)
+### Install packages
+- Install Gin and Mongo-driver
+``` 
+    go get -u github.com/gin-gonic/gin 
+    go get go.mongodb.org/mongo-driver/mongo
+```
+- To install the OTel SDK, run:
+``` 
+    go get go.opentelemetry.io/otel 
+    go.opentelemetry.io/otel/sdk 
+``` 
+- Gin instrumentation: Install otelgin
+``` 
+   go get go.opentelemetry.io/contrib/instrumentation/github.com/gin-gonic/gin/otelgin
+``` 
+- Mongo instrumentation: Install otelmongo
+``` 
+   go get go.opentelemetry.io/contrib/instrumentation/go.mongodb.org/mongo-driver/mongo/otelmongo
+``` 
+- Propagation Configuration
+
+``` 
+    Install pcakge 
+    go get go.opentelemetry.io/contrib/propagators/b3"
+    [Single Header: b3: {TraceId}-{SpanId}-{SamplingState}-{ParentSpanId}
+   Multiple Headers: x-b3-traceid: {TraceId} x-b3-parentspanid: {ParentSpanId} x-b3-spanid: {SpanId} x-b3-sampled: {SamplingState} x-b3-flags: {DebugFlag}]
+
+    for single header ,
+    p := b3.New()\
+	// Register the B3 propagator globally.\
+	otel.SetTextMapPropagator(p)\
+
+    for single and multiheader\
+    p := b3.New(b3.WithInjectEncoding(b3.B3MultipleHeader | b3.B3SingleHeader))\
+	otel.SetTextMapPropagator(p)\
+``` 
+- OpenTelemetry Go and Jaeger Tracing: Export traces to Jaeger (Visualization with Jaeager)\
+1) Install the Jaeger exporter
+``` 
+    go get go.opentelemetry.io/otel/exporters/jaeger
+``` 
+2) create tracing file and add following code(tracing.go):
+``` 
+package tracing
+import (\
+  "go.opentelemetry.io/otel/exporters/jaeger"
+  "go.opentelemetry.io/otel/sdk/resource"
+  sdktrace "go.opentelemetry.io/otel/sdk/trace"
+  semconv "go.opentelemetry.io/otel/semconv/v1.4.0"
+)
+func JaegerTraceProvider() (*sdktrace.TracerProvider, error) {
+  exp, err := jaeger.New(jaeger.WithCollectorEndpoint(jaeger.WithEndpoint("http://localhost:14268/api/traces")))
+  if err != nil {
+      return nil, err
+  }
+  tp := sdktrace.NewTracerProvider(
+      sdktrace.WithBatcher(exp),
+      sdktrace.WithResource(resource.NewWithAttributes(
+          semconv.SchemaURL,
+          semconv.ServiceNameKey.String("do-demo"), // name of the service 
+          semconv.DeploymentEnvironmentKey.String("dev"),
+      )),
+  )
+  return tp, nil
+}
+``` 
+
+
+
